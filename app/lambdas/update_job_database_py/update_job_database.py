@@ -29,11 +29,13 @@ OR
 }
 
 """
+from typing import Any, Dict
 
 from orcabus_api_tools.fastq_unarchiving import update_status
+from orcabus_api_tools.fastq_unarchiving.models import Job
 
 
-def handler(event, context):
+def handler(event, context) -> Job:
     """
     Get inputs then use the fastq unarchiving tools layer to update the status of a job in the database
     :param event:
@@ -49,7 +51,7 @@ def handler(event, context):
         return update_status(job_id, status)
     else:
         error_message = event.get('errorMessages', None)
-        update_status(job_id, status, error_message)
+        return update_status(job_id, status, error_message)
 
 
 # if __name__ == '__main__':
