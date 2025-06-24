@@ -1,67 +1,66 @@
-Template Service
+Fastq Unarchiving Service
 ================================================================================
 
-- [Template Service](#template-service)
-  - [Service Description](#service-description)
-    - [Name \& responsibility](#name--responsibility)
-    - [Description](#description)
-    - [API Endpoints](#api-endpoints)
-    - [Consumed Events](#consumed-events)
-    - [Published Events](#published-events)
-    - [(Internal) Data states \& persistence model](#internal-data-states--persistence-model)
-    - [Major Business Rules](#major-business-rules)
-    - [Permissions \& Access Control](#permissions--access-control)
-    - [Change Management](#change-management)
-      - [Versioning strategy](#versioning-strategy)
-      - [Release management](#release-management)
-  - [Infrastructure \& Deployment](#infrastructure--deployment)
-    - [Stateful](#stateful)
-    - [Stateless](#stateless)
-    - [CDK Commands](#cdk-commands)
-    - [Stacks](#stacks)
-  - [Development](#development)
-    - [Project Structure](#project-structure)
-    - [Setup](#setup)
-      - [Requirements](#requirements)
-      - [Install Dependencies](#install-dependencies)
-      - [First Steps](#first-steps)
-    - [Conventions](#conventions)
-    - [Linting \& Formatting](#linting--formatting)
-    - [Testing](#testing)
-  - [Glossary \& References](#glossary--references)
-
+<!-- TOC -->
+* [Fastq Unarchiving Service](#fastq-unarchiving-service)
+  * [Service Description](#service-description)
+    * [API Endpoints](#api-endpoints)
+    * [Step Functions](#step-functions)
+    * [Consumed Events](#consumed-events)
+    * [Published Events](#published-events)
+    * [Change Management](#change-management)
+      * [Versioning strategy](#versioning-strategy)
+      * [Release management](#release-management)
+  * [Infrastructure & Deployment](#infrastructure--deployment-)
+    * [Stateful](#stateful)
+    * [Stateless](#stateless)
+    * [CDK Commands](#cdk-commands)
+    * [Stacks](#stacks)
+  * [Development](#development)
+    * [Project Structure](#project-structure)
+    * [Setup](#setup)
+      * [Requirements](#requirements)
+      * [Install Dependencies](#install-dependencies)
+      * [First Steps](#first-steps)
+    * [Conventions](#conventions)
+    * [Linting & Formatting](#linting--formatting)
+    * [Testing](#testing)
+  * [Glossary & References](#glossary--references)
+<!-- TOC -->
 
 Service Description
 --------------------------------------------------------------------------------
 
-### Name & responsibility
-
-### Description
+![Fastq Unarchiving Service](docs/drawio-exports/fastq-unarchiving-service.drawio.svg)
 
 ### API Endpoints
 
-This service provides a RESTful API following OpenAPI conventions. 
-The Swagger documentation of the production endpoint is available here: 
+This service provides a RESTful API following OpenAPI conventions.
+The Swagger documentation of the production endpoint is available at [https://fastq-unarchiving.dev.umccr.org/schema/swagger-ui#/](https://fastq-unarchiving.dev.umccr.org/schema/swagger-ui#/)
+
+
+### Step Functions
+
+The main step function calls the [s3-steps-copy](https://github.com/umccr/steps-s3-copy) service to copy the fastq files from the archive bucket
+back to the original cache bucket.
+
+Then the fastq unarchiving service updates the ingest id of the restored fastq files to match those of the original fastq files in archive.
+
+This means that when accessed by the fastq manager, the s3 uris will now point to the restored fastq files in the cache bucket, rather than the archived ones.
+
+![Fastq Unarchiving Step Function](docs/workflow-studio-exports/fastq-unarchiving-step-function.drawio.svg)
 
 
 ### Consumed Events
 
-| Name / DetailType | Source         | Schema Link       | Description         |
-|-------------------|----------------|-------------------|---------------------|
-| `SomeServiceStateChange` | `orcabus.someservice` | <schema link> | Announces service state changes |
+There are no consumed events for this service. Jobs are expected to be triggered via the REST API endpoints.
 
 ### Published Events
 
-| Name / DetailType | Source         | Schema Link       | Description         |
-|-------------------|----------------|-------------------|---------------------|
-| `TemplateStateChange` | `orcabus.templatemanager` | <schema link> | Announces Template data state changes |
+| Name / DetailType                | Source                     | Schema Link                                                                                 | Description                      |
+|----------------------------------|----------------------------|---------------------------------------------------------------------------------------------|----------------------------------|
+| `FastqUnarchivingJobStateChange` | `orcabus.fastqunarchiving` | [fastq-unarchiving-job-state-change](event-schemas/fastq-unarchiving-job-state-change.json) | Announces job state changes |
 
-
-### (Internal) Data states & persistence model
-
-### Major Business Rules
-
-### Permissions & Access Control
 
 ### Change Management
 
@@ -74,7 +73,7 @@ E.g. Manual tagging of git commits following Semantic Versioning (semver) guidel
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
 
 
-Infrastructure & Deployment 
+Infrastructure & Deployment
 --------------------------------------------------------------------------------
 
 Short description with diagrams where appropriate.
@@ -211,7 +210,7 @@ make fix
 ### Testing
 
 
-Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.  
+Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.
 
 ```sh
 make test
@@ -228,4 +227,3 @@ Service specific terms:
 |-----------|--------------------------------------------------|
 | Foo | ... |
 | Bar | ... |
-
