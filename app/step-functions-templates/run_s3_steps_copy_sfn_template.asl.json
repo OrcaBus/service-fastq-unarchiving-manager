@@ -231,7 +231,7 @@
                   "Type": "Task",
                   "Resource": "arn:aws:states:::lambda:invoke",
                   "Arguments": {
-                    "FunctionName": "${__get_original_ingest_id_lambda_function_arn__}",
+                    "FunctionName": "${__find_original_ingest_id_lambda_function_arn__}",
                     "Payload": {
                       "fastqIdList": "{% $fastqIdListIngestMapIter %}",
                       "s3Uri": "{% $s3UriIngestMapIter %}"
