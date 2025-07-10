@@ -8,7 +8,7 @@ JobStatusType = Literal[
     'SUCCEEDED',
 ]
 
-JobStatusList: List[JobStatusType] = list[JobStatusType.__args__]
+JobStatusList: List[JobStatusType] = list(JobStatusType.__args__)
 
 JobStatusStateChangeType = Literal[
     'RUNNING',
@@ -17,7 +17,7 @@ JobStatusStateChangeType = Literal[
     'SUCCEEDED',
 ]
 
-JobStatusStateChangeList = list[JobStatusStateChangeType.__args__]
+JobStatusStateChangeList = list(JobStatusStateChangeType.__args__)
 
 JobStatusTerminalType = Literal[
     'FAILED',
@@ -25,4 +25,4 @@ JobStatusTerminalType = Literal[
     'SUCCEEDED'
 ]
 
-JobStatusTerminalList = list[JobStatusTerminalType.__args__]
+JobStatusTerminalList = list(JobStatusTerminalType.__args__)
