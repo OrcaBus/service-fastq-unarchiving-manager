@@ -84,7 +84,7 @@ Given a library id, you can find the fastq ids by querying the fastq manager ser
 # Globals
 AWS_PROFILE='umccr-production'
 FASTQ_SET_API_ENDPOINT="https://fastq.prod.umccr.org/api/v1/fastqSet"
-FASTQ_UNARCHIVING_ENDPOINT="https://fastq-unarchiving.prod.umccr.org/"
+FASTQ_UNARCHIVING_ENDPOINT="https://fastq-unarchiving.prod.umccr.org/api/v1/jobs"
 
 ORCABUS_TOKEN="$( \
   aws secretsmanager get-secret-value \
