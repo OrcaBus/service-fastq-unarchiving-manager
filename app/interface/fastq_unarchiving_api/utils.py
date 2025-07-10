@@ -55,7 +55,7 @@ async def sanitise_ufr_orcabus_id(job_id: str) -> str:
     raise ValueError(f"Invalid job id '{job_id}'")
 
 
-async def sanitise_status(status: JobStatusType) -> str:
+async def sanitise_status(status: JobStatusType) -> JobStatusType:
     return status
 
 def get_aws_lambda_client() -> 'LambdaClient':
