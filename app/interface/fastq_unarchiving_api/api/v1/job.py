@@ -197,7 +197,8 @@ async def create_job(job_obj: JobCreate) -> JobResponse:
 )
 async def update_job(job_id: str = Depends(sanitise_ufr_orcabus_id), job_status_obj: Annotated[JobPatch, Body()] = get_default_job_patch_entry()) -> JobResponse:
     if job_status_obj.status not in JobStatusStateChangeList:
-        raise HTTPException(status_code=400, detail="Invalid status provided, must be one of RUNNING, FAILED or SUCCEEDED")
+        valid_statuses = ", ".join(JobStatusStateChangeList)
+        raise HTTPException(status_code=400, detail=f"Invalid status provided, must be one of {valid_statuses}")
     try:
         job_obj = JobData.get(job_id)
         job_obj.status = job_status_obj.status
