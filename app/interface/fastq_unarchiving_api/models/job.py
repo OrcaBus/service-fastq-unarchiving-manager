@@ -17,7 +17,7 @@ from pydantic import Field, BaseModel, model_validator, ConfigDict
 from datetime import datetime, timezone, timedelta
 
 from fastapi_tools import QueryPaginatedResponse
-from . import JobStatus
+from . import JobStatusType, JobStatusStateChangeType
 
 # Util imports
 from ..utils import (
@@ -62,7 +62,7 @@ class JobWithId(JobBase, JobOrcabusId):
     """
     # We also have the steps execution id as an attribute to add
     steps_execution_arn: Optional[str] = None
-    status: JobStatus = Field(default='PENDING')
+    status: JobStatusType = Field(default='PENDING')
     start_time: datetime = Field(default_factory=default_start_time_factory)
     ttl: int = Field(default_factory=default_ttl_factory)
     end_time: Optional[datetime] = None
@@ -112,7 +112,7 @@ class JobCreate(JobBase):
 
 
 class JobPatch(BaseModel):
-    status: JobStatus
+    status: JobStatusStateChangeType
 
 
 class JobData(JobWithId, Dyntastic):
