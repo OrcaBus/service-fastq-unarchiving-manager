@@ -23,7 +23,7 @@ from fastapi_tools import QueryPagination
 # Model imports
 from ...models.job import JobData, JobQueryPaginatedResponse, JobCreate, JobResponse, JobPatch
 from ...models.query import JobQueryParameters
-from ...models import JobStatus
+from ...models import JobStatusType, JobStatusTerminalList, JobStatusStateChangeList
 from ...globals import UNARCHIVING_JOB_STATE_MACHINE_ARN_ENV_VAR, get_default_job_patch_entry
 from ...utils import sanitise_ufr_orcabus_id, launch_sfn, abort_sfn
 from ...events import put_job_update_event
@@ -163,7 +163,7 @@ async def create_job(job_obj: JobCreate) -> JobResponse:
         raise HTTPException(status_code=409, detail=str(e))
 
     # Launch the job
-    job_obj.status = JobStatus.PENDING
+    job_obj.status = 'PENDING'
     job_obj.start_time = datetime.now(timezone.utc)
     job_obj.steps_execution_arn = launch_sfn(
         sfn_name=environ[UNARCHIVING_JOB_STATE_MACHINE_ARN_ENV_VAR],
@@ -196,13 +196,13 @@ async def create_job(job_obj: JobCreate) -> JobResponse:
     """)
 )
 async def update_job(job_id: str = Depends(sanitise_ufr_orcabus_id), job_status_obj: Annotated[JobPatch, Body()] = get_default_job_patch_entry()) -> JobResponse:
-    if job_status_obj.status not in ['RUNNING', 'FAILED', 'ABORTED', 'SUCCEEDED']:
+    if job_status_obj.status not in JobStatusStateChangeList:
         raise HTTPException(status_code=400, detail="Invalid status provided, must be one of RUNNING, FAILED or SUCCEEDED")
     try:
         job_obj = JobData.get(job_id)
         job_obj.status = job_status_obj.status
         # Add in end time if the job is in a terminal state
-        if job_obj.status in [JobStatus.SUCCEEDED, JobStatus.FAILED]:
+        if job_obj.status in JobStatusTerminalList:
             job_obj.end_time = datetime.now(timezone.utc)
         job_obj.save()
         job_dict = job_obj.to_dict()
@@ -251,7 +251,7 @@ async def abort_job(job_id: str = Depends(sanitise_ufr_orcabus_id)) -> JobRespon
 async def delete_job(job_id: str = Depends(sanitise_ufr_orcabus_id)) -> JobResponse:
     try:
         job_obj = JobData.get(job_id)
-        if job_obj.status in ['PENDING', 'RUNNING']:
+        if not job_obj.status in JobStatusTerminalList:
             raise AssertionError("Job is in a state that cannot be deleted")
         job_obj.delete()
         return job_obj.to_dict()

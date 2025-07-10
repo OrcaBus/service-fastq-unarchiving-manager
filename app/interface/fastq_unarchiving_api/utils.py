@@ -17,7 +17,7 @@ from .globals import (
     ORCABUS_ULID_REGEX_MATCH,
     FQLR_CONTEXT_PREFIX, UNARCHIVE_FASTQ_JOB_PREFIX
 )
-from .models import JobStatus
+from .models import JobStatusType
 
 
 if typing.TYPE_CHECKING:
@@ -55,7 +55,7 @@ async def sanitise_ufr_orcabus_id(job_id: str) -> str:
     raise ValueError(f"Invalid job id '{job_id}'")
 
 
-async def sanitise_status(status: JobStatus) -> str:
+async def sanitise_status(status: JobStatusType) -> str:
     return status
 
 def get_aws_lambda_client() -> 'LambdaClient':

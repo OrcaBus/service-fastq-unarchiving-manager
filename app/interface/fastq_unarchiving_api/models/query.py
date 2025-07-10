@@ -2,7 +2,7 @@ from typing import Optional, List, Dict
 
 from fastapi import Query, HTTPException
 
-from . import JobStatus
+from . import JobStatusType
 from datetime import datetime, timedelta
 
 
@@ -32,11 +32,11 @@ class JobQueryParameters(BaseQueryParameters):
                 strict=False
             ),
             # Status query
-            status: Optional[JobStatus] = Query(
+            status: Optional[JobStatusType] = Query(
                 None,
                 description="The status to filter by, use <code>status[]</code> for multiple values"
             ),
-            status_list: Optional[List[JobStatus]] = Query(
+            status_list: Optional[List[JobStatusType]] = Query(
                 None,
                 alias="status[]",
                 description=None,
