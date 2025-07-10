@@ -7,8 +7,8 @@ from fastq_unarchiving_api.api.v1 import job
 
 openapi_url = "/schema/openapi.json"
 app = FastAPI(
-    title="Fastq Api",
-    summary="Access Fastq Api Information",
+    title="Fastq Unarchiving Api",
+    summary="Access Fastq Unarchiving Api Information",
     openapi_url=openapi_url,
 )
 router = APIRouter(prefix="/api/v1")

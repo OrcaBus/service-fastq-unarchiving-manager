@@ -1,3 +1,5 @@
+from typing import Literal
+
 JobStatus = Literal[
     'PENDING',
     'RUNNING',

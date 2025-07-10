@@ -23,11 +23,15 @@ export const FASTQ_UNARCHIVING_STATE_CHANGE_DETAIL_TYPE = 'FastqUnarchivingJobSt
 
 // API Constants
 export const API_VERSION = 'v1';
+export const API_NAME = 'FastqUnarchiving';
 export const FASTQ_UNARCHIVING_SUBDOMAIN_NAME = 'fastq-unarchiving';
 
 // S3 Constants
 // Use PIPELINE_CACHE_PREFIX, and PIPELINE_CACHE_BUCKET in the config file
 export const DEFAULT_RESTORE_MIDFIX = 'restored/14d/';
+
+// Steps Constants
+export const SFN_PREFIX = 'fastq-unarchiving';
 
 // Steps Copy Constants
 export const S3_COPY_STEPS_BUCKET: Record<StageName, string> = {

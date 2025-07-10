@@ -9,7 +9,7 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { buildAllLambdas } from './lambdas';
 import { buildAllStepFunctions } from './step-functions';
-import { DEFAULT_RESTORE_MIDFIX } from './constants';
+import { API_NAME, DEFAULT_RESTORE_MIDFIX } from './constants';
 import {
   addHttpRoutes,
   buildApiGateway,
@@ -89,7 +89,7 @@ export class StatelessApplicationStack extends cdk.Stack {
     // Build the API interface lambda
     const lambdaApi = buildApiInterfaceLambda(this, {
       /* Lambda props */
-      lambdaName: 'fastqDecompressionJobApiInterface',
+      lambdaName: `${API_NAME}JobApiInterface`,
 
       /* Table props */
       table: jobsTable,
