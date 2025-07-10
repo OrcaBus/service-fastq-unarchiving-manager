@@ -35,7 +35,8 @@
           "type": "string"
         },
         "status": {
-          "type": "string"
+          "type": "string",
+          "enum": ["PENDING", "RUNNING", "FAILED", "ABORTED", "SUCCEEDED"]
         },
         "startTime": {
           "type": "string",
@@ -45,18 +46,14 @@
           "type": "string",
           "format": "date-time"
         },
-        "errorMessages": {}
+        "errorMessages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
-      "required": [
-        "id",
-        "fastqIds",
-        "jobType",
-        "stepsExecutionArn",
-        "status",
-        "startTime",
-        "endTime",
-        "errorMessages"
-      ]
+      "required": ["id", "fastqIds", "jobType", "stepsExecutionArn", "status", "startTime"]
     }
   },
   "required": ["EventBusName", "DetailType", "Source", "Detail"]
