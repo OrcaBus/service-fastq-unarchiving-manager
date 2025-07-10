@@ -196,7 +196,7 @@ async def create_job(job_obj: JobCreate) -> JobResponse:
     """)
 )
 async def update_job(job_id: str = Depends(sanitise_ufr_orcabus_id), job_status_obj: Annotated[JobPatch, Body()] = get_default_job_patch_entry()) -> JobResponse:
-    if job_status_obj.status not in [JobStatus.RUNNING, JobStatus.FAILED, JobStatus.SUCCEEDED]:
+    if job_status_obj.status not in ['RUNNING', 'FAILED', 'ABORTED', 'SUCCEEDED']:
         raise HTTPException(status_code=400, detail="Invalid status provided, must be one of RUNNING, FAILED or SUCCEEDED")
     try:
         job_obj = JobData.get(job_id)
@@ -225,10 +225,10 @@ async def abort_job(job_id: str = Depends(sanitise_ufr_orcabus_id)) -> JobRespon
     try:
         job_obj = JobData.get(job_id)
 
-        if not job_obj.status in [JobStatus.PENDING, JobStatus.RUNNING]:
+        if not job_obj.status in ['PENDING', 'RUNNING']:
             raise AssertionError("Job is not in a state that can be aborted")
 
-        job_obj.status = JobStatus.ABORTED
+        job_obj.status = 'ABORTED'
 
         # Abort the execution arn
         abort_sfn(job_obj.steps_execution_arn)
@@ -251,7 +251,7 @@ async def abort_job(job_id: str = Depends(sanitise_ufr_orcabus_id)) -> JobRespon
 async def delete_job(job_id: str = Depends(sanitise_ufr_orcabus_id)) -> JobResponse:
     try:
         job_obj = JobData.get(job_id)
-        if job_obj.status in [JobStatus.PENDING, JobStatus.RUNNING]:
+        if job_obj.status in ['PENDING', 'RUNNING']:
             raise AssertionError("Job is in a state that cannot be deleted")
         job_obj.delete()
         return job_obj.to_dict()

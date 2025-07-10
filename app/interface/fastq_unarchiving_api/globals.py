@@ -25,5 +25,4 @@ UNARCHIVING_JOB_STATE_MACHINE_ARN_ENV_VAR = "UNARCHIVING_JOB_STATE_MACHINE_ARN"
 
 def get_default_job_patch_entry() -> 'JobPatch':
     from .models.job import JobPatch
-    from .models import JobStatus
-    return JobPatch(**dict({"status": JobStatus.RUNNING}))
+    return JobPatch(**dict({"status": 'RUNNING'}))

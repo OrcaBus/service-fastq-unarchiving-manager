@@ -3,6 +3,8 @@ import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accoun
 import { StatefulApplicationConfig, StatelessApplicationConfig } from './interfaces';
 import { EVENT_BUS_NAME } from '@orcabus/platform-cdk-constructs/shared-config/event-bridge';
 import {
+  API_NAME,
+  FASTQ_UNARCHIVING_SUBDOMAIN_NAME,
   JOB_API_TABLE_INDEXES,
   JOB_API_TABLE_NAME,
   S3_COPY_STEPS_BUCKET,
@@ -41,8 +43,8 @@ export const getStatelessStackProps = (stage: StageName): StatelessApplicationCo
     // API Prefix
     apiGatewayCognitoProps: {
       ...getDefaultApiGatewayConfiguration(stage),
-      apiName: 'ServiceAPI',
-      customDomainNamePrefix: 'service-orcabus',
+      apiName: API_NAME,
+      customDomainNamePrefix: FASTQ_UNARCHIVING_SUBDOMAIN_NAME,
     },
   };
 };

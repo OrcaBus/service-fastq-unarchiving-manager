@@ -19,7 +19,7 @@ import {
   stepFunctionRequirementsMap,
 } from './interfaces';
 import { camelCaseToSnakeCase } from '../utils';
-import { S3_COPY_STEPS_BUCKET_PREFIX, STEP_FUNCTIONS_DIR } from '../constants';
+import { S3_COPY_STEPS_BUCKET_PREFIX, SFN_PREFIX, STEP_FUNCTIONS_DIR } from '../constants';
 import { NagSuppressions } from 'cdk-nag';
 
 /** Step Function stuff */
@@ -125,7 +125,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
-    stateMachineName: `fastq-deora-${props.stateMachineName}`,
+    stateMachineName: `${SFN_PREFIX}-${props.stateMachineName}`,
     definitionBody: sfn.DefinitionBody.fromFile(
       path.join(STEP_FUNCTIONS_DIR, sfnNameToSnakeCase + `_sfn_template.asl.json`)
     ),
