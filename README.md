@@ -48,7 +48,7 @@ Then the fastq unarchiving service updates the ingest id of the restored fastq f
 
 This means that when accessed by the fastq manager, the s3 uris will now point to the restored fastq files in the cache bucket, rather than the archived ones.
 
-![Fastq Unarchiving Step Function](docs/workflow-studio-exports/fastq-unarchiving-step-function.drawio.svg)
+![Fastq Unarchiving Step Function](docs/workflow-studio-exports/fastq-unarchiving-sfn.svg)
 
 
 ### Consumed Events
@@ -61,7 +61,6 @@ There are no consumed events for this service. Jobs are expected to be triggered
 |----------------------------------|----------------------------|---------------------------------------------------------------------------------------------|----------------------------------|
 | `FastqUnarchivingJobStateChange` | `orcabus.fastqunarchiving` | [fastq-unarchiving-job-state-change](event-schemas/fastq-unarchiving-job-state-change.json) | Announces job state changes |
 
-
 ### Change Management
 
 #### Versioning strategy
@@ -72,6 +71,114 @@ E.g. Manual tagging of git commits following Semantic Versioning (semver) guidel
 
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
 
+Usage
+--------------------------------------------------------------------------------
+
+To use the fastq unarchiving service, you will need to know the fastq ids of the fastq files you want to unarchive.
+
+Given a library id, you can find the fastq ids by querying the fastq manager service:
+
+### Part 1: Getting the Fastq IDs to unarchive
+
+```shell
+# Globals
+AWS_PROFILE='umccr-production'
+FASTQ_SET_API_ENDPOINT="https://fastq.prod.umccr.org/api/v1/fastqSet"
+FASTQ_UNARCHIVING_ENDPOINT="https://fastq-unarchiving.prod.umccr.org/"
+
+ORCABUS_TOKEN="$( \
+  aws secretsmanager get-secret-value \
+    --secret-id orcabus/token-service-jwt \
+    --output json \
+    --query SecretString | \
+  jq --raw-output \
+    'fromjson | .id_token' \
+)"
+
+# Glocals
+LIBRARY_ID_LIST=( \
+  "L2301201" \
+  "L2301202" \
+)
+
+# Get the query parameters
+QUERY_PARAMS="$( \
+  jq --raw-output --null-input \
+    --arg libraryIdListStr "${LIBRARY_ID_LIST[*]}" \
+    '
+      $libraryIdListStr | split(" ") |
+      map(
+        "library[]=\(.)"
+      ) |
+      . += [
+        # We want to know which fastq sets have fastq files in DeepArchive
+        # So we need to include the s3 details to get the storage class
+        "includeS3Details=true",
+        # And we only want the current fastq sets for each library
+        "currentFastqSet=true"
+      ] |
+      join("&")
+    ' \
+)"
+
+fastq_id_list="$( \
+  curl --request GET \
+    --fail --silent --show-error --location \
+    --header "Accept: application/json" \
+    --header "Authorization: ${ORCABUS_TOKEN}" \
+    --url "${FASTQ_SET_API_ENDPOINT}?${QUERY_PARAMS}" | \
+  jq --raw-output \
+    '
+      .results |
+      # Iterate over the fastq sets
+      map(
+        # Filter for fastq sets with readSet.r1.storageClass == "DeepArchive"
+        .fastqSet |
+        map(
+          select(
+            .readSet.r1.storageClass == "DeepArchive"
+          )
+        ) |
+        # And get the fastq ids in the fastq set
+        map(
+          .id
+        )
+      ) |
+      # Flatten the list of fastq ids (since weve mapped within a map)
+      flatten
+    ' \
+)"
+```
+
+### Part 2: Unarchiving the Fastq Files
+
+Now we have our list, we can generate the JSON body for the unarchiving post request,
+and send it to the fastq unarchiving service to trigger the unarchiving job.
+
+This will take around 10 hours to complete.
+
+```shell
+
+fastq_unarchiving_job_json_body="$( \
+  jq --null-input \
+    --argjson fastqIdList "${fastq_id_list}" \
+    '
+      {
+          "fastqIdList": $fastqIdList,
+          "jobType": "S3_UNARCHIVING"
+      }
+    ' \
+)"
+
+curl --request POST \
+  --fail --silent --show-error --location \
+  --header "Accept: application/json" \
+  --header "Content-Type: application/json" \
+  --header "Authorization: ${ORCABUS_TOKEN}" \
+  --data "${fastq_unarchiving_job_json_body}" \
+  --url "${FASTQ_UNARCHIVING_ENDPOINT}" | \
+jq --raw-output
+```
 
 Infrastructure & Deployment
 --------------------------------------------------------------------------------
