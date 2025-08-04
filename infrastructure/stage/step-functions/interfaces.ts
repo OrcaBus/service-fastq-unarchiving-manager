@@ -15,6 +15,7 @@ export const stepFunctionNames: StepFunctionName[] = ['runS3StepsCopy'];
 export interface StepFunctionRequirements {
   needsS3Access?: boolean;
   needsSfnExecutionAccessPermissions?: boolean;
+  needsDistributedMapPermissions?: boolean;
 }
 
 export const stepFunctionRequirementsMap: Record<StepFunctionName, StepFunctionRequirements> = {
@@ -23,6 +24,8 @@ export const stepFunctionRequirementsMap: Record<StepFunctionName, StepFunctionR
     needsS3Access: true,
     // Needs to turn on the heartbeat scheduler
     needsSfnExecutionAccessPermissions: true,
+    // Needs permissions to run distributed map
+    needsDistributedMapPermissions: true,
   },
 };
 
