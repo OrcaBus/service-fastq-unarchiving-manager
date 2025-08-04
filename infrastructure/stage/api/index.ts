@@ -84,7 +84,7 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
   // Few extra env vars
   lambdaFunction.addEnvironment('EVENT_SOURCE', STACK_EVENT_SOURCE);
   lambdaFunction.addEnvironment(
-    'EVENT_DETAIL_TYPE_JOB_STATE_CHANGE',
+    'EVENT_JOB_STATE_CHANGE_DETAIL_TYPE',
     FASTQ_UNARCHIVING_STATE_CHANGE_DETAIL_TYPE
   );
 
