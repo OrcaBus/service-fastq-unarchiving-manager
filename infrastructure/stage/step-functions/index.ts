@@ -60,7 +60,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
   return definitionSubstitutions;
 }
 
-function wireUpStateMachinePermissions(props: SfnObject): void {
+function wireUpStateMachinePermissions(scope: Construct, props: SfnObject): void {
   /* Wire up lambda permissions */
   const sfnRequirements = stepFunctionRequirementsMap[props.stateMachineName];
 
@@ -68,6 +68,11 @@ function wireUpStateMachinePermissions(props: SfnObject): void {
   const lambdaFunctions = props.lambdaObjects.filter((lambdaObject) =>
     lambdaFunctionNamesInSfn.includes(lambdaObject.lambdaName)
   );
+
+  /* Allow the state machine to invoke the lambda function */
+  for (const lambdaObject of lambdaFunctions) {
+    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
+  }
 
   /* Sfn Requirements */
   if (sfnRequirements.needsS3Access) {
@@ -86,6 +91,7 @@ function wireUpStateMachinePermissions(props: SfnObject): void {
     );
   }
 
+  /* Needs distributed map permissions */
   if (sfnRequirements.needsSfnExecutionAccessPermissions) {
     // Grant start execution permissions
     props.sfnStepsCopyStateMachine.grantStartExecution(props.stateMachineObj);
@@ -114,9 +120,47 @@ function wireUpStateMachinePermissions(props: SfnObject): void {
     );
   }
 
-  /* Allow the state machine to invoke the lambda function */
-  for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
+  /* Add in distributed map policy */
+  if (sfnRequirements.needsDistributedMapPermissions) {
+    // Requirement for distributed maps to work
+    /* State machine runs a distributed map */
+    // Because this steps execution uses a distributed map running an express step function, we
+    // have to wire up some extra permissions
+    // Grant the state machine's role to execute itself
+    // However we cannot just grant permission to the role as this will result in a circular dependency
+    // between the state machine and the role
+    // Instead we use the workaround here - https://github.com/aws/aws-cdk/issues/28820#issuecomment-1936010520
+    const distributedMapPolicy = new iam.Policy(scope, `${props.stateMachineName}-dist-map-role`, {
+      document: new iam.PolicyDocument({
+        statements: [
+          new iam.PolicyStatement({
+            resources: [props.stateMachineObj.stateMachineArn],
+            actions: ['states:StartExecution'],
+          }),
+          new iam.PolicyStatement({
+            resources: [
+              `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:${props.stateMachineObj.stateMachineName}/*:*`,
+            ],
+            actions: ['states:RedriveExecution'],
+          }),
+        ],
+      }),
+    });
+
+    // Add the policy to the state machine role
+    props.stateMachineObj.role.attachInlinePolicy(distributedMapPolicy);
+
+    // Will need a cdk nag suppression for this
+    NagSuppressions.addResourceSuppressions(
+      [props.stateMachineObj, distributedMapPolicy],
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Distributed Map IAM Policy requires asterisk in the resource ARN',
+        },
+      ],
+      true
+    );
   }
 }
 
@@ -133,7 +177,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
   });
 
   /* Grant the state machine permissions */
-  wireUpStateMachinePermissions({
+  wireUpStateMachinePermissions(scope, {
     stateMachineObj: stateMachine,
     ...props,
   });
