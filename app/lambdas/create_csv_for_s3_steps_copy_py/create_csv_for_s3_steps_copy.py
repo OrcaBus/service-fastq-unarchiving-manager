@@ -11,17 +11,16 @@ We take an
 
 """
 
+# Standard imports
 import typing
 from typing import List, Tuple
-
-from orcabus_api_tools.fastq import get_fastq
 from urllib.parse import urlparse
 import pandas as pd
 import boto3
 
-from orcabus_api_tools.fastq.models import BoolAllEnum
+# Layer imports
+from orcabus_api_tools.fastq import get_fastq
 
-# Type hinting
 if typing.TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
 
@@ -43,7 +42,7 @@ def upload_file_to_s3(bucket: str, key: str, file_contents: str):
 def get_s3_uris_from_fastq_id(fastq_id: str) -> List[str]:
     fastq_obj = get_fastq(
         fastq_id,
-        includeS3Details=BoolAllEnum.true.value
+        includeS3Details=True
     )
 
     return list(filter(

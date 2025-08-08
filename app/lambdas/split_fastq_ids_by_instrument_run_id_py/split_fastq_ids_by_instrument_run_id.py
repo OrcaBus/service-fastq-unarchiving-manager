@@ -22,8 +22,11 @@ Return a list of objects with the following structure
 ]
 
 """
+
+# Standard library imports
 from typing import List, Dict, Union
 
+# Layer imports
 from orcabus_api_tools.fastq import get_fastq
 
 
