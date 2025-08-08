@@ -8,21 +8,21 @@ Given a list of fastq ids and a file name, find the fastq id where their s3 uri 
 We need to do this since the s3 steps copy won't necessarily copy over the original ingest id and tags
 """
 
+# Standard library imports
 from typing import List, Dict
 from urllib.parse import urlparse
 from pathlib import Path
 
 # Local layer imports
 from orcabus_api_tools.fastq import get_fastq
-from orcabus_api_tools.fastq.models import FastqListRow
-from orcabus_api_tools.fastq.models import BoolAllEnum
+from orcabus_api_tools.fastq.models import Fastq
 
 
-def get_fastq_objects(fastq_ids: List[str]) -> List[FastqListRow]:
+def get_fastq_objects(fastq_ids: List[str]) -> List[Fastq]:
     return list(map(
         lambda fastq_id: get_fastq(
             fastq_id,
-            includeS3Details=BoolAllEnum.true.value
+            includeS3Details=True
         ),
         fastq_ids
     ))
