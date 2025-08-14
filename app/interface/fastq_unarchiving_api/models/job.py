@@ -13,7 +13,7 @@ from typing import Optional, Self, ClassVar
 
 from dyntastic import Dyntastic
 from fastapi.encoders import jsonable_encoder
-from pydantic import Field, BaseModel, model_validator, ConfigDict
+from pydantic import Field, BaseModel, model_validator, ConfigDict, AliasChoices
 from datetime import datetime, timezone, timedelta
 
 from fastapi_tools import QueryPaginatedResponse
@@ -102,6 +102,13 @@ class JobCreate(JobBase):
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True
+    )
+
+    # FIXME - bug in migration over from monorepo, this should allow us to use both in the meantime.
+    fastq_ids: List[str] = Field(
+        validation_alias=AliasChoices("fastqIdList", "fastqIds"),
+        description="List of FASTQ IDs to unarchive",
+        min_length=1,
     )
 
     def model_dump(self, **kwargs) -> 'JobResponse':
