@@ -52,20 +52,3 @@ def handler(event, context) -> Job:
     else:
         error_message = event.get('errorMessages', None)
         return update_status(job_id, status, error_message)
-
-
-# if __name__ == '__main__':
-#     import json
-#     from os import environ
-#     environ['AWS_PROFILE'] = 'umccr-development'
-#     environ['HOSTNAME_SSM_PARAMETER'] = '/hosted_zone/umccr/name'
-#     environ['ORCABUS_TOKEN_SECRET_ID'] = 'orcabus/token-service-jwt'
-#     # Test the handler
-#     event = {
-#         "jobId": "ufj.01JPF0KV3DBJHJFKYZVSDF6DEC",
-#         "status": "RUNNING",
-#     }
-#     print(json.dumps(
-#         handler(event, None),
-#         indent=2
-#     ))

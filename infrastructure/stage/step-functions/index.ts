@@ -19,7 +19,7 @@ import {
   stepFunctionRequirementsMap,
 } from './interfaces';
 import { camelCaseToSnakeCase } from '../utils';
-import { S3_COPY_STEPS_BUCKET_PREFIX, SFN_PREFIX, STEP_FUNCTIONS_DIR } from '../constants';
+import { S3_COPY_STEPS_BUCKET_PREFIX, STACK_PREFIX, STEP_FUNCTIONS_DIR } from '../constants';
 import { NagSuppressions } from 'cdk-nag';
 
 /** Step Function stuff */
@@ -38,7 +38,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
   for (const lambdaObject of lambdaFunctions) {
     const sfnSubtitutionKey = `__${camelCaseToSnakeCase(lambdaObject.lambdaName)}_lambda_function_arn__`;
     definitionSubstitutions[sfnSubtitutionKey] =
-      lambdaObject.lambdaFunction.currentVersion.functionArn;
+      lambdaObject.lambdaFunction.latestVersion.functionArn;
   }
 
   definitionSubstitutions['__aws_s3_copy_steps_bucket__'] = props.s3StepsCopyBucket.bucketName;
@@ -71,8 +71,18 @@ function wireUpStateMachinePermissions(scope: Construct, props: SfnObject): void
 
   /* Allow the state machine to invoke the lambda function */
   for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
+    lambdaObject.lambdaFunction.grantInvoke(props.stateMachineObj);
   }
+  NagSuppressions.addResourceSuppressions(
+    props.stateMachineObj,
+    [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Need permission to invoke any version of the lambdas in the list',
+      },
+    ],
+    true
+  );
 
   /* Sfn Requirements */
   if (sfnRequirements.needsS3Access) {
@@ -169,7 +179,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
-    stateMachineName: `${SFN_PREFIX}-${props.stateMachineName}`,
+    stateMachineName: `${STACK_PREFIX}--${props.stateMachineName}`,
     definitionBody: sfn.DefinitionBody.fromFile(
       path.join(STEP_FUNCTIONS_DIR, sfnNameToSnakeCase + `_sfn_template.asl.json`)
     ),

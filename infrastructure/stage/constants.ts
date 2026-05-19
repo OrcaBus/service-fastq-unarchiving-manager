@@ -30,20 +30,20 @@ export const FASTQ_UNARCHIVING_SUBDOMAIN_NAME = 'fastq-unarchiving';
 // Use PIPELINE_CACHE_PREFIX, and PIPELINE_CACHE_BUCKET in the config file
 export const DEFAULT_RESTORE_MIDFIX = 'restored/14d/';
 
-// Steps Constants
-export const SFN_PREFIX = 'fastq-unarchiving';
+// Stack Constants
+export const STACK_PREFIX = 'fastq-unarchiving';
 
 // Steps Copy Constants
 export const S3_COPY_STEPS_BUCKET: Record<StageName, string> = {
-  BETA: 'stepss3copy-working66f7dd3f-x4jwbnt6qvxc', // pragma: allowlist secret
-  GAMMA: 'stg-stepss3copystack-stepss3copyworking01b34927-szqxpff5lsbx', // pragma: allowlist secret
-  PROD: 'prod-stepss3copystack-stepss3copyworking01b34927-mp9y88d9e1py', // pragma: allowlist secret
+  BETA: 'stepss3copy-working66f7dd3f-xhr0lonzniqq', // pragma: allowlist secret
+  GAMMA: 'stg-stepss3copystack-stepss3copyworking01b34927-cxeihtal0buq', // pragma: allowlist secret
+  PROD: 'prod-stepss3copystack-stepss3copyworking01b34927-wpet59sdjgzi', // pragma: allowlist secret
 };
 
 export const S3_COPY_STEPS_BUCKET_PREFIX: string = 'FASTQ_UNARCHIVING/';
 
 export const S3_COPY_STEPS_FUNCTION_ARN: Record<StageName, string> = {
-  BETA: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS.BETA}:stateMachine:StepsS3CopyStateMachine157A1409-jx4WNxpdckgQ`, // pragma: allowlist secret
-  GAMMA: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS.GAMMA}:stateMachine:StepsS3CopyStateMachine157A1409-ikBos7HzwDtL`, // pragma: allowlist secret
-  PROD: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS.PROD}:stateMachine:StepsS3CopyStateMachine157A1409-YbCgUX7dCZRm`, // pragma: allowlist secret
+  BETA: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS['BETA']}:stateMachine:StepsS3CopyStateMachine157A1409-RRK2W5NEeUSC`, // pragma: allowlist secret
+  GAMMA: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS['GAMMA']}:stateMachine:StepsS3CopyStateMachine157A1409-ikBos7HzwDtL`, // pragma: allowlist secret
+  PROD: `arn:aws:states:${REGION}:${ACCOUNT_ID_ALIAS['PROD']}:stateMachine:StepsS3CopyStateMachine157A1409-3kaW26vI3yre`, // pragma: allowlist secret
 };
