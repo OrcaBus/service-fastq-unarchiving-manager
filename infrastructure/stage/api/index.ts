@@ -30,7 +30,7 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
     entry: path.join(INTERFACE_DIR),
-    runtime: lambda.Runtime.PYTHON_3_12,
+    runtime: lambda.Runtime.PYTHON_3_14,
     architecture: lambda.Architecture.ARM_64,
     index: 'handler.py',
     handler: 'handler',
@@ -60,7 +60,7 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
     [
       {
         id: 'AwsSolutions-IAM5',
-        reason: 'Step functions has access to execute all versions of the lambda',
+        reason: 'All versions of the lambda can invoke the step function',
       },
     ],
     true

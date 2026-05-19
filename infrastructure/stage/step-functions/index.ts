@@ -71,8 +71,18 @@ function wireUpStateMachinePermissions(scope: Construct, props: SfnObject): void
 
   /* Allow the state machine to invoke the lambda function */
   for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
+    lambdaObject.lambdaFunction.grantInvoke(props.stateMachineObj);
   }
+  NagSuppressions.addResourceSuppressions(
+    props.stateMachineObj,
+    [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Need permission to invoke any version of the lambdas in the list',
+      },
+    ],
+    true
+  );
 
   /* Sfn Requirements */
   if (sfnRequirements.needsS3Access) {
