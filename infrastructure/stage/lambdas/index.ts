@@ -22,7 +22,7 @@ function buildLambdaFunction(scope: Construct, props: LambdaProps): LambdaObject
   const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
   const lambdaObject = new PythonUvFunction(scope, props.lambdaName, {
     entry: path.join(LAMBDA_DIR, lambdaNameToSnakeCase + '_py'),
-    runtime: lambda.Runtime.PYTHON_3_12,
+    runtime: lambda.Runtime.PYTHON_3_14,
     architecture: lambda.Architecture.ARM_64,
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
