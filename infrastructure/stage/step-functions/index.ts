@@ -38,7 +38,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
   for (const lambdaObject of lambdaFunctions) {
     const sfnSubtitutionKey = `__${camelCaseToSnakeCase(lambdaObject.lambdaName)}_lambda_function_arn__`;
     definitionSubstitutions[sfnSubtitutionKey] =
-      lambdaObject.lambdaFunction.currentVersion.functionArn;
+      lambdaObject.lambdaFunction.latestVersion.functionArn;
   }
 
   definitionSubstitutions['__aws_s3_copy_steps_bucket__'] = props.s3StepsCopyBucket.bucketName;

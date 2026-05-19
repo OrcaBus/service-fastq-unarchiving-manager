@@ -43,7 +43,7 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
   // Add SFN arns as environment variables
   // And allow the lambda to invoke the step functions
   for (const sfnObject of props.stepFunctions) {
-    sfnObject.stateMachineObj.grantStartExecution(lambdaFunction.currentVersion);
+    sfnObject.stateMachineObj.grantStartExecution(lambdaFunction);
     switch (sfnObject.stateMachineName) {
       case 'runS3StepsCopy': {
         lambdaFunction.addEnvironment(
@@ -98,10 +98,6 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
     [
-      {
-        id: 'AwsSolutions-L1',
-        reason: 'Will migrate to PYTHON_3_13 ASAP, soz',
-      },
       {
         id: 'AwsSolutions-IAM4',
         reason: 'We use the standard AWS Lambda Basic execution role.',
