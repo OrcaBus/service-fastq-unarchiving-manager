@@ -54,6 +54,17 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
       }
     }
   }
+  // Add in lambda suppressions
+  NagSuppressions.addResourceSuppressions(
+    lambdaFunction,
+    [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Step functions has access to execute all versions of the lambda',
+      },
+    ],
+    true
+  );
 
   // Add the table in as an environment variable
   // And allow the lambda to write + read from the table
