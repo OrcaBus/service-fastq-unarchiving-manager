@@ -13,3 +13,6 @@ minimumReleaseAgeExclude:
   - '@typescript-eslint/utils@8.59.4'
   - '@typescript-eslint/visitor-keys@8.59.4'
   - typescript-eslint@8.59.4
+  - '@aws-cdk/aws-lambda-python-alpha@2.256.0-alpha.0'
+  - '@aws-cdk/cloud-assembly-schema@53.25.0'
+  - aws-cdk-lib@2.256.0
