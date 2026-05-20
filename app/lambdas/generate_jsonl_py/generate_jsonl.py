@@ -121,4 +121,3 @@ def handler(event, context):
             Key=str(Path(s3_steps_copy_prefix) / s3_steps_copy_jsonl_key),
             Filename=temp_file.name
         )
-
