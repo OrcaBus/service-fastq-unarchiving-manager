@@ -45,7 +45,7 @@ export interface BuildAllLambdaProps {
 }
 
 export interface BuildLambdaProps extends BuildAllLambdaProps {
-  lambdaName: LambdaNameType
+  lambdaName: LambdaNameType;
 }
 
 export interface LambdaObject {

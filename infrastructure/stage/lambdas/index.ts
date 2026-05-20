@@ -58,7 +58,7 @@ export function buildAllLambdas(scope: Construct, props: BuildAllLambdaProps): L
     lambdaList.push(
       buildLambdaFunction(scope, {
         lambdaName: lambdaName,
-        ...props
+        ...props,
       })
     );
   }
