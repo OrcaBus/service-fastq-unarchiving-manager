@@ -85,7 +85,7 @@
       "Arguments": {
         "StateMachineArn": "${__aws_s3_steps_copy_sfn_arn__}",
         "Input": {
-          "instructionsPrefix": "{% $s3StepsCopyCsvPrefix %}",
+          "instructionsPrefix": "{% $s3StepsCopyPrefix %}",
           "instructionsKey": "{% $s3StepsCopyJsonlKey %}",
           "destinationBucket": "{% $restoreBucket %}",
           "destinationPrefix": "{% $restorePrefix %}",

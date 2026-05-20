@@ -31,7 +31,7 @@ function buildLambdaFunction(scope: Construct, props: BuildLambdaProps): LambdaO
   });
 
   if (lambdaRequirements.needsS3Access) {
-    props.stepsCopyBucket.grantReadWrite(lambdaObject, props.stepsCopyPrefix);
+    props.stepsCopyBucket.grantReadWrite(lambdaObject, `${props.stepsCopyPrefix}*`);
 
     // Add nag suppression for S3 access
     NagSuppressions.addResourceSuppressions(

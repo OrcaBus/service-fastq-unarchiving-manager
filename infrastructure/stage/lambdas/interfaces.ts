@@ -11,6 +11,7 @@ export type LambdaNameType =
 export const lambdaNameList: LambdaNameType[] = [
   'findOriginalIngestId',
   'checkSuccessfulStepsCopy',
+  'generateJsonl',
   'updateIngestId',
   'updateJobDatabase',
 ];
