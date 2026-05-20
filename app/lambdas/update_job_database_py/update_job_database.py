@@ -50,5 +50,5 @@ def handler(event, context) -> Job:
     if not has_error:
         return update_status(job_id, status)
     else:
-        error_message = event.get('errorMessages', None)
+        error_message = event.get('errorMessage', None)
         return update_status(job_id, status, error_message)

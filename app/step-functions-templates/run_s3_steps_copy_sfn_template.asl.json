@@ -282,7 +282,7 @@
         "Payload": {
           "jobId": "{% $jobId %}",
           "hasError": "{% $states.input.hasError %}",
-          "errorMessages": "{% $states.input.errorMessage %}",
+          "errorMessage": "{% $states.input.errorMessage %}",
           "status": "{% $states.input.hasError ? 'FAILED' : 'SUCCEEDED' %}"
         }
       },
