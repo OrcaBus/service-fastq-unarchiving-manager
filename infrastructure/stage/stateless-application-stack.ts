@@ -70,6 +70,7 @@ export class StatelessApplicationStack extends cdk.Stack {
     */
     const lambdaObjects = buildAllLambdas(this, {
       stepsCopyBucket: s3StepsCopyBucket,
+      stepsCopyPrefix: props.s3StepsCopyPrefix,
     });
 
     /*

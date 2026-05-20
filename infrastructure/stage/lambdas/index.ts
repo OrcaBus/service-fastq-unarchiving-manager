@@ -3,10 +3,10 @@
  */
 import {
   lambdaNameList,
-  LambdaProps,
   lambdaRequirementsMap,
   LambdaObject,
   BuildAllLambdaProps,
+  BuildLambdaProps,
 } from './interfaces';
 import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 import { Construct } from 'constructs';
@@ -17,7 +17,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { LAMBDA_DIR } from '../constants';
 import { NagSuppressions } from 'cdk-nag';
 
-function buildLambdaFunction(scope: Construct, props: LambdaProps): LambdaObject {
+function buildLambdaFunction(scope: Construct, props: BuildLambdaProps): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
   const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
   const lambdaObject = new PythonUvFunction(scope, props.lambdaName, {
@@ -31,7 +31,7 @@ function buildLambdaFunction(scope: Construct, props: LambdaProps): LambdaObject
   });
 
   if (lambdaRequirements.needsS3Access) {
-    props.stepsCopyBucket.grantReadWrite(lambdaObject);
+    props.stepsCopyBucket.grantReadWrite(lambdaObject, `${props.stepsCopyPrefix}*`);
 
     // Add nag suppression for S3 access
     NagSuppressions.addResourceSuppressions(
@@ -58,7 +58,7 @@ export function buildAllLambdas(scope: Construct, props: BuildAllLambdaProps): L
     lambdaList.push(
       buildLambdaFunction(scope, {
         lambdaName: lambdaName,
-        stepsCopyBucket: props.stepsCopyBucket,
+        ...props,
       })
     );
   }

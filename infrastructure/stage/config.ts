@@ -8,6 +8,7 @@ import {
   JOB_API_TABLE_INDEXES,
   JOB_API_TABLE_NAME,
   S3_COPY_STEPS_BUCKET,
+  S3_COPY_STEPS_BUCKET_PREFIX,
   S3_COPY_STEPS_FUNCTION_ARN,
 } from './constants';
 import {
@@ -34,6 +35,7 @@ export const getStatelessStackProps = (stage: StageName): StatelessApplicationCo
 
     // S3 Steps Copy Stuff
     s3StepsCopyBucketName: S3_COPY_STEPS_BUCKET[stage],
+    s3StepsCopyPrefix: S3_COPY_STEPS_BUCKET_PREFIX,
     s3StepsCopyStateMachineArn: S3_COPY_STEPS_FUNCTION_ARN[stage],
 
     // S3 Cache Bucket Stuff

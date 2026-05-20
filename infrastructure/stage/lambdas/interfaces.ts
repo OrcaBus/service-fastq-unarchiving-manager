@@ -1,17 +1,17 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 
-export type LambdaNameList =
-  | 'createCsvForS3StepsCopy'
+export type LambdaNameType =
   | 'findOriginalIngestId'
-  | 'splitFastqIdsByInstrumentRunId'
+  | 'checkSuccessfulStepsCopy'
+  | 'generateJsonl'
   | 'updateIngestId'
   | 'updateJobDatabase';
 
-export const lambdaNameList: LambdaNameList[] = [
-  'createCsvForS3StepsCopy',
+export const lambdaNameList: LambdaNameType[] = [
   'findOriginalIngestId',
-  'splitFastqIdsByInstrumentRunId',
+  'checkSuccessfulStepsCopy',
+  'generateJsonl',
   'updateIngestId',
   'updateJobDatabase',
 ];
@@ -21,16 +21,16 @@ export interface LambdaRequirements {
   needsS3Access?: boolean;
 }
 
-export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> = {
-  createCsvForS3StepsCopy: {
-    needsOrcabusApiToolsLayer: true,
-    needsS3Access: true,
-  },
+export const lambdaRequirementsMap: Record<LambdaNameType, LambdaRequirements> = {
   findOriginalIngestId: {
     needsOrcabusApiToolsLayer: true,
   },
-  splitFastqIdsByInstrumentRunId: {
+  checkSuccessfulStepsCopy: {
+    needsS3Access: true,
+  },
+  generateJsonl: {
     needsOrcabusApiToolsLayer: true,
+    needsS3Access: true,
   },
   updateIngestId: {
     needsOrcabusApiToolsLayer: true,
@@ -40,13 +40,16 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
   },
 };
 
-export interface LambdaProps {
-  lambdaName: LambdaNameList;
+export interface BuildAllLambdaProps {
   stepsCopyBucket: IBucket;
+  stepsCopyPrefix: string;
 }
 
-export type BuildAllLambdaProps = Omit<LambdaProps, 'lambdaName'>;
+export interface BuildLambdaProps extends BuildAllLambdaProps {
+  lambdaName: LambdaNameType;
+}
 
-export interface LambdaObject extends Omit<LambdaProps, 'stepsCopyBucket'> {
+export interface LambdaObject {
+  lambdaName: LambdaNameType;
   lambdaFunction: PythonFunction;
 }
