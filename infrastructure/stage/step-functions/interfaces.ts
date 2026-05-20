@@ -2,7 +2,7 @@
 Step Function Interfaces
 */
 
-import { LambdaNameList, LambdaObject } from '../lambdas/interfaces';
+import { LambdaNameType, LambdaObject } from '../lambdas/interfaces';
 import { IStateMachine, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 
@@ -30,11 +30,11 @@ export const stepFunctionRequirementsMap: Record<StepFunctionName, StepFunctionR
 };
 
 // Map the lambda functions to their step function names
-export const stepFunctionLambdaMap: Record<StepFunctionName, LambdaNameList[]> = {
+export const stepFunctionLambdaMap: Record<StepFunctionName, LambdaNameType[]> = {
   runS3StepsCopy: [
-    'createCsvForS3StepsCopy',
+    'checkSuccessfulStepsCopy',
     'findOriginalIngestId',
-    'splitFastqIdsByInstrumentRunId',
+    'generateJsonl',
     'updateIngestId',
     'updateJobDatabase',
   ],

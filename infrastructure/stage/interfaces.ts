@@ -16,6 +16,7 @@ export interface StatelessApplicationConfig {
 
   // S3 Steps Copy stuff
   s3StepsCopyBucketName: string;
+  s3StepsCopyPrefix: string;
   s3StepsCopyStateMachineArn: string;
 
   // Pipeline Cache Stuff
