@@ -1,7 +1,6 @@
 allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@orcabus/platform-cdk-constructs@1.5.4'
   - '@typescript-eslint/eslint-plugin@8.59.4'
   - '@typescript-eslint/parser@8.59.4'
   - '@typescript-eslint/project-service@8.59.4'
@@ -16,3 +15,4 @@ minimumReleaseAgeExclude:
   - '@aws-cdk/aws-lambda-python-alpha@2.256.0-alpha.0'
   - '@aws-cdk/cloud-assembly-schema@53.25.0'
   - aws-cdk-lib@2.256.0
+  - '@orcabus/platform-cdk-constructs@1.5.5'
