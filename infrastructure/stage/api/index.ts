@@ -94,19 +94,6 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
     `https://${FASTQ_UNARCHIVING_SUBDOMAIN_NAME}.${props.hostedZoneSsmParameter.stringValue}`
   );
 
-  // Grant query permissions on indexes
-  const unarchiving_job_index_arn_list: string[] = props.tableIndexNames.map((index_name) => {
-    return `arn:aws:dynamodb:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/${props.table.tableName}/index/${index_name}-index`;
-  });
-
-  // Add query permissions for unarchiving job indexes
-  lambdaFunction.addToRolePolicy(
-    new iam.PolicyStatement({
-      actions: ['dynamodb:Query'],
-      resources: unarchiving_job_index_arn_list,
-    })
-  );
-
   // Add in stack suppressions
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
