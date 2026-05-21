@@ -96,7 +96,7 @@
       "Catch": [
         {
           "ErrorEquals": ["States.ALL"],
-          "Next": "Add failed as output",
+          "Next": "Handle Error",
           "Comment": "Steps function failure",
           "Output": {
             "error": "{% $states.errorOutput ? $states.errorOutput : null %}"
