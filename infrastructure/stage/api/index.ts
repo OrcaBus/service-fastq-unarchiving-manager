@@ -54,17 +54,6 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
       }
     }
   }
-  // Add in lambda suppressions
-  NagSuppressions.addResourceSuppressions(
-    lambdaFunction,
-    [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'All versions of the lambda can invoke the step function',
-      },
-    ],
-    true
-  );
 
   // Add the table in as an environment variable
   // And allow the lambda to write + read from the table
@@ -73,14 +62,14 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
     'DYNAMODB_HOST',
     `https://dynamodb.${cdk.Aws.REGION}.amazonaws.com`
   );
-  props.table.grantReadWriteData(lambdaFunction.currentVersion);
+  props.table.grantReadWriteData(lambdaFunction);
 
   const tableIndexArns: string[] = props.tableIndexNames.map((index_name) => {
     return `arn:aws:dynamodb:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/${props.table.tableName}/index/${index_name}-index`;
   });
 
   // Add index arns to role policy
-  lambdaFunction.currentVersion.addToRolePolicy(
+  lambdaFunction.addToRolePolicy(
     new iam.PolicyStatement({
       actions: ['dynamodb:Query'],
       resources: tableIndexArns,
@@ -90,7 +79,7 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
   // Add the event bus in as an environment variable
   // And allow the lambda to put events to the event bus
   lambdaFunction.addEnvironment('EVENT_BUS_NAME', props.eventBus.eventBusName);
-  props.eventBus.grantPutEventsTo(lambdaFunction.currentVersion);
+  props.eventBus.grantPutEventsTo(lambdaFunction);
 
   // Few extra env vars
   lambdaFunction.addEnvironment('EVENT_SOURCE', STACK_EVENT_SOURCE);
@@ -105,6 +94,19 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
     `https://${FASTQ_UNARCHIVING_SUBDOMAIN_NAME}.${props.hostedZoneSsmParameter.stringValue}`
   );
 
+  // Grant query permissions on indexes
+  const unarchiving_job_index_arn_list: string[] = props.tableIndexNames.map((index_name) => {
+    return `arn:aws:dynamodb:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/${props.table.tableName}/index/${index_name}-index`;
+  });
+
+  // Add query permissions for unarchiving job indexes
+  lambdaFunction.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ['dynamodb:Query'],
+      resources: unarchiving_job_index_arn_list,
+    })
+  );
+
   // Add in stack suppressions
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
@@ -113,21 +115,12 @@ export function buildApiInterfaceLambda(scope: Construct, props: LambdaApiProps)
         id: 'AwsSolutions-IAM4',
         reason: 'We use the standard AWS Lambda Basic execution role.',
       },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'All versions of the lambda can invoke and query',
+      },
     ],
     true
-  );
-
-  // Grant query permissions on indexes
-  const unarchiving_job_index_arn_list: string[] = props.tableIndexNames.map((index_name) => {
-    return `arn:aws:dynamodb:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:table/${props.table.tableName}/index/${index_name}-index`;
-  });
-
-  // Add query permissions for unarchiving job indexes
-  lambdaFunction.currentVersion.addToRolePolicy(
-    new iam.PolicyStatement({
-      actions: ['dynamodb:Query'],
-      resources: unarchiving_job_index_arn_list,
-    })
   );
 
   return lambdaFunction;
