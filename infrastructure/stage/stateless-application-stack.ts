@@ -17,10 +17,11 @@ import {
   buildApiInterfaceLambda,
 } from './api';
 import { HOSTED_ZONE_DOMAIN_PARAMETER_NAME } from '@orcabus/platform-cdk-constructs/api-gateway';
+import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationConfig;
 
-export class StatelessApplicationStack extends cdk.Stack {
+export class StatelessApplicationStack extends GitStack {
   constructor(scope: Construct, id: string, props: StatelessApplicationStackProps) {
     super(scope, id, props);
 
