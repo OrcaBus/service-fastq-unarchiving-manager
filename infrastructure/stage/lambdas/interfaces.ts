@@ -6,7 +6,8 @@ export type LambdaNameType =
   | 'checkSuccessfulStepsCopy'
   | 'generateJsonl'
   | 'updateIngestId'
-  | 'updateJobDatabase';
+  | 'updateJobDatabase'
+  | 'syncFilemanager';
 
 export const lambdaNameList: LambdaNameType[] = [
   'findOriginalIngestId',
@@ -14,6 +15,7 @@ export const lambdaNameList: LambdaNameType[] = [
   'generateJsonl',
   'updateIngestId',
   'updateJobDatabase',
+  'syncFilemanager',
 ];
 
 export interface LambdaRequirements {
@@ -36,6 +38,9 @@ export const lambdaRequirementsMap: Record<LambdaNameType, LambdaRequirements> =
     needsOrcabusApiToolsLayer: true,
   },
   updateJobDatabase: {
+    needsOrcabusApiToolsLayer: true,
+  },
+  syncFilemanager: {
     needsOrcabusApiToolsLayer: true,
   },
 };
