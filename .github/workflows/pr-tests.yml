@@ -3,32 +3,22 @@ name: Pull Request Tests
 on:
   merge_group: {}
   pull_request:
-    paths-ignore:
-      # The ignore only works only if changes to the main branch only include the following files.
-      # So if the commit only contain .md changes but the PR change contain more, the ignore fails
-      # https://github.com/actions/runner/issues/2324#issuecomment-1703345084
-      - '**.md'
-      - '**.svg'
-      - '**.drawio'
-      - '**.png'
     types:
       - opened
       - reopened
       - synchronize
       - ready_for_review
-      - auto_merge_enabled
     branches:
       - main
 
 permissions: read-all
 
 # Actions Used (please keep this documented here as added)
-#  https://github.com/marketplace/actions/checkout
-#  https://github.com/marketplace/actions/setup-python
-#  https://github.com/marketplace/actions/trufflehog-oss
-#  https://github.com/marketplace/actions/checkout
-#  https://github.com/marketplace/actions/cache
-#  https://github.com/actions-rust-lang/setup-rust-toolchain
+#  https://github.com/marketplace/actions/checkout (v7)
+#  https://github.com/marketplace/actions/setup-node-js-environment (v7)
+#  https://github.com/marketplace/actions/setup-pnpm (v6)
+#  https://github.com/marketplace/actions/trufflehog-oss (v3.96.0)
+#  https://github.com/dorny/paths-filter (v4)
 
 jobs:
   pre-commit-lint-security:
@@ -36,15 +26,15 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: 'pnpm'
 
       - run: corepack enable
@@ -62,7 +52,7 @@ jobs:
           pip3 install pre-commit detect-secrets black ggshield
 
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@v3.34.0
+        uses: trufflesecurity/trufflehog@v3.96.0
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}
