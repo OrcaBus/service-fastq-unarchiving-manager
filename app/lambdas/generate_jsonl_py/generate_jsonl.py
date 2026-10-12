@@ -40,7 +40,6 @@ def get_read_uris(fastq_id: str) -> List[str]:
 
 
 def get_jsonl_rows(
-        restore_prefix: str,
         fastq_id: str
 ) -> List[TypedDict]:
     """
@@ -52,7 +51,7 @@ def get_jsonl_rows(
     # Get the restore midfix
     restore_midfix = Path(fastq_obj['instrumentRunId']) / f"Lane_{fastq_obj['lane']}"
 
-    relative_path_prefix = str(Path(restore_prefix).joinpath(restore_midfix)) + "/"
+    relative_path_prefix = str(restore_midfix.joinpath(fastq_obj['library']['libraryId'])) + "/"
 
     return list(map(
         lambda read_uri_iter_: {
@@ -98,7 +97,6 @@ def handler(event, context):
             concat,
             list(map(
                 lambda fastq_id_iter_: get_jsonl_rows(
-                    restore_prefix=restore_prefix,
                     fastq_id=fastq_id_iter_,
                 ),
                 fastq_id_list
