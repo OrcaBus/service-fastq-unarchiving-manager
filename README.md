@@ -1,82 +1,94 @@
-Fastq Unarchiving Service
-================================================================================
+# Fastq Unarchiving Service
 
-<!-- TOC -->
-* [Fastq Unarchiving Service](#fastq-unarchiving-service)
-  * [Service Description](#service-description)
-    * [API Endpoints](#api-endpoints)
-    * [Step Functions](#step-functions)
-    * [Consumed Events](#consumed-events)
-    * [Published Events](#published-events)
-    * [Change Management](#change-management)
-      * [Versioning strategy](#versioning-strategy)
-      * [Release management](#release-management)
-  * [Infrastructure & Deployment](#infrastructure--deployment-)
-    * [Stateful](#stateful)
-    * [Stateless](#stateless)
-    * [CDK Commands](#cdk-commands)
-    * [Stacks](#stacks)
-  * [Development](#development)
-    * [Project Structure](#project-structure)
-    * [Setup](#setup)
-      * [Requirements](#requirements)
-      * [Install Dependencies](#install-dependencies)
-      * [First Steps](#first-steps)
-    * [Conventions](#conventions)
-    * [Linting & Formatting](#linting--formatting)
-    * [Testing](#testing)
-  * [Glossary & References](#glossary--references)
-<!-- TOC -->
+- [Overview](#overview)
+- [Service Flow](#service-flow)
+  - [1. Create an unarchiving job (API)](#1-create-an-unarchiving-job-api)
+  - [2. S3 Steps Copy (archive → cache)](#2-s3-steps-copy-archive--cache)
+  - [3. Update ingest ids](#3-update-ingest-ids)
+  - [4. Job state change event](#4-job-state-change-event)
+- [Event Contract](#event-contract)
+  - [Consumed Events](#consumed-events)
+  - [Published Events](#published-events)
+- [Using the Service](#using-the-service)
+  - [Part 1: Getting the Fastq IDs to unarchive](#part-1-getting-the-fastq-ids-to-unarchive)
+  - [Part 2: Unarchiving the Fastq Files](#part-2-unarchiving-the-fastq-files)
+- [Infrastructure](#infrastructure)
+  - [Stateful Resources](#stateful-resources)
+  - [Stateless Resources](#stateless-resources)
+  - [Stacks](#stacks)
+- [CI/CD and Release Management](#cicd-and-release-management)
+- [Related Services](#related-services)
+- [Glossary & References](#glossary--references)
 
-Service Description
---------------------------------------------------------------------------------
+---
 
-![Fastq Unarchiving Service](docs/drawio-exports/fastq-unarchiving-service.drawio.svg)
+## Overview
 
-### API Endpoints
+This service restores archived FASTQ files from deep-archive storage back to the original
+cache bucket, so they become accessible again through the [Fastq Manager](https://github.com/OrcaBus/service-fastq-manager).
 
-This service provides a RESTful API following OpenAPI conventions.
-The Swagger documentation of the production endpoint is available at [https://fastq-unarchiving.dev.umccr.org/schema/swagger-ui#/](https://fastq-unarchiving.dev.umccr.org/schema/swagger-ui#/)
+Unarchiving jobs are triggered via a RESTful API (not by consuming events). The Swagger
+documentation of the production endpoint is available at
+[https://fastq-unarchiving.prod.umccr.org/schema/swagger-ui#/](https://fastq-unarchiving.prod.umccr.org/schema/swagger-ui#/).
 
+An unarchiving job can take ~10 hours to complete.
 
-### Step Functions
+![Fastq Unarchiving Service](docs/drawio-exports/fastq-unarchiving.drawio.svg)
 
-The main step function calls the [s3-steps-copy](https://github.com/umccr/steps-s3-copy) service to copy the fastq files from the archive bucket
-back to the original cache bucket.
+---
 
-Then the fastq unarchiving service updates the ingest id of the restored fastq files to match those of the original fastq files in archive.
+## Service Flow
 
-This means that when accessed by the fastq manager, the s3 uris will now point to the restored fastq files in the cache bucket, rather than the archived ones.
+The service orchestrates a single Step Function state machine that drives an unarchiving job
+from creation through to completion.
 
 ![Fastq Unarchiving Step Function](docs/workflow-studio-exports/fastq-unarchiving-sfn.svg)
 
+### 1. Create an unarchiving job (API)
+
+A caller `POST`s a list of fastq ids and a job type (e.g. `S3_UNARCHIVING`) to the API. A job
+record is persisted and the state machine is started.
+
+### 2. S3 Steps Copy (archive → cache)
+
+**State machine**: [`run_s3_steps_copy_sfn_template`](app/step-functions-templates/run_s3_steps_copy_sfn_template.asl.json)
+
+The state machine calls the external [s3-steps-copy](https://github.com/umccr/steps-s3-copy)
+service to copy the FASTQ files from the archive bucket back to the original cache bucket, then
+checks that each copy step completed successfully.
+
+### 3. Update ingest ids
+
+After the copy, the service updates the ingest id of the restored FASTQ files to match those of
+the original archived files. This makes the Fastq Manager resolve S3 URIs to the restored cache
+copies instead of the archived ones.
+
+### 4. Job state change event
+
+As the job progresses, the service publishes a `FastqUnarchivingJobStateChange` event announcing
+job state changes.
+
+---
+
+## Event Contract
 
 ### Consumed Events
 
-There are no consumed events for this service. Jobs are expected to be triggered via the REST API endpoints.
+There are no consumed events for this service. Jobs are triggered via the REST API endpoints.
 
 ### Published Events
 
-| Name / DetailType                | Source                     | Schema Link                                                                                 | Description                      |
-|----------------------------------|----------------------------|---------------------------------------------------------------------------------------------|----------------------------------|
+| DetailType                       | Source                     | Schema                                                                                      | Description                 |
+|----------------------------------|----------------------------|---------------------------------------------------------------------------------------------|-----------------------------|
 | `FastqUnarchivingJobStateChange` | `orcabus.fastqunarchiving` | [fastq-unarchiving-job-state-change](event-schemas/fastq-unarchiving-job-state-change.json) | Announces job state changes |
 
-### Change Management
+---
 
-#### Versioning strategy
+## Using the Service
 
-E.g. Manual tagging of git commits following Semantic Versioning (semver) guidelines.
-
-#### Release management
-
-The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
-
-Usage
---------------------------------------------------------------------------------
-
-To use the fastq unarchiving service, you will need to know the fastq ids of the fastq files you want to unarchive.
-
-Given a library id, you can find the fastq ids by querying the fastq manager service:
+To use the fastq unarchiving service, you will need to know the fastq ids of the fastq files you
+want to unarchive. Given a library id, you can find the fastq ids by querying the Fastq Manager
+service.
 
 ### Part 1: Getting the Fastq IDs to unarchive
 
@@ -180,157 +192,83 @@ curl --request POST \
 jq --raw-output
 ```
 
-Infrastructure & Deployment
---------------------------------------------------------------------------------
+---
 
-Short description with diagrams where appropriate.
-Deployment settings / configuration (e.g. CodePipeline(s) / automated builds).
+## Infrastructure
 
-Infrastructure and deployment are managed via CDK. This template provides two types of CDK entry points: `cdk-stateless` and `cdk-stateful`.
+The service is deployed via AWS CDK. Resources are split into two stacks: stateful (data/config)
+and stateless (compute/events).
 
+Event source: `orcabus.fastqunarchiving`
 
-### Stateful
+### Stateful Resources
 
-- Queues
-- Buckets
-- Database
-- ...
+- **DynamoDB** — persists unarchiving job records and their state.
 
-### Stateless
-- Lambdas
-- StepFunctions
+### Stateless Resources
 
-
-### CDK Commands
-
-You can access CDK commands using the `pnpm` wrapper script.
-
-- **`cdk-stateless`**: Used to deploy stacks containing stateless resources (e.g., AWS Lambda), which can be easily redeployed without side effects.
-- **`cdk-stateful`**: Used to deploy stacks containing stateful resources (e.g., AWS DynamoDB, AWS RDS), where redeployment may not be ideal due to potential side effects.
-
-The type of stack to deploy is determined by the context set in the `./bin/deploy.ts` file. This ensures the correct stack is executed based on the provided context.
-
-For example:
-
-```sh
-# Deploy a stateless stack
-pnpm cdk-stateless <command>
-
-# Deploy a stateful stack
-pnpm cdk-stateful <command>
-```
+- **API handler** (Python) — the REST API in [`app/interface/`](app/interface/), exposing the
+  versioned `api/v1` routes for creating and querying jobs.
+- **Lambda functions** (Python) — one per task in the state machine; see [`app/lambdas/`](app/lambdas/)
+  (e.g. `generate_jsonl_py`, `check_successful_steps_copy_py`, `find_original_ingest_id_py`,
+  `update_ingest_id_py`, `update_job_database_py`, `sync_filemanager_py`).
+- **Step Functions state machine** — the ASL template in
+  [`app/step-functions-templates/`](app/step-functions-templates/).
 
 ### Stacks
 
-This CDK project manages multiple stacks. The root stack (the only one that does not include `DeploymentPipeline` in its stack ID) is deployed in the toolchain account and sets up a CodePipeline for cross-environment deployments to `beta`, `gamma`, and `prod`.
-
-To list all available stacks, run:
+This CDK project manages multiple stacks. The root stack (the only one that does not include
+`DeploymentPipeline` in its stack ID) is deployed in the toolchain account and sets up a
+CodePipeline for cross-environment deployments to `beta`, `gamma`, and `prod`.
 
 ```sh
+# List stateful stacks
+pnpm cdk-stateful ls
+
+# List stateless stacks
 pnpm cdk-stateless ls
+
+# OrcaBusStatelessServiceStack
+# OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusBeta/DeployStack (OrcaBusBeta-DeployStack)
+# OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusGamma/DeployStack (OrcaBusGamma-DeployStack)
+# OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusProd/DeployStack (OrcaBusProd-DeployStack)
 ```
 
-Example output:
+---
 
-```sh
-OrcaBusStatelessServiceStack
-OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusBeta/DeployStack (OrcaBusBeta-DeployStack)
-OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusGamma/DeployStack (OrcaBusGamma-DeployStack)
-OrcaBusStatelessServiceStack/DeploymentPipeline/OrcaBusProd/DeployStack (OrcaBusProd-DeployStack)
-```
+## CI/CD and Release Management
 
+All changes merged to `main` are automatically built and released across `beta`, `gamma`, and
+`prod` environments. Versioning follows Semantic Versioning (semver) via manual git tags.
 
-Development
---------------------------------------------------------------------------------
+GitHub Actions enforce quality on every pull request
+([`.github/workflows/pr-tests.yml`](.github/workflows/pr-tests.yml)): `make check` for linting
+and code formatting, and `pnpm test` for the CDK/IaC tests. A daily `pnpm audit` workflow
+([`.github/workflows/pnpm-audit.yml`](.github/workflows/pnpm-audit.yml)) scans dependencies for
+vulnerabilities and opens an auto-fix PR when it can resolve them.
 
-### Project Structure
+---
 
-The root of the project is an AWS CDK project where the main application logic lives inside the `./app` folder.
+## Related Services
 
-The project is organized into the following key directories:
+| Role            | Service                                                                    |
+|-----------------|----------------------------------------------------------------------------|
+| Fastq           | [Fastq Manager](https://github.com/OrcaBus/service-fastq-manager)          |
+| S3 copy         | [s3-steps-copy](https://github.com/umccr/steps-s3-copy)                    |
 
-- **`./app`**: Contains the main application logic. You can open the code editor directly in this folder, and the application should run independently.
+---
 
-- **`./bin/deploy.ts`**: Serves as the entry point of the application. It initializes two root stacks: `stateless` and `stateful`. You can remove one of these if your service does not require it.
+## Glossary & References
 
-- **`./infrastructure`**: Contains the infrastructure code for the project:
-  - **`./infrastructure/toolchain`**: Includes stacks for the stateless and stateful resources deployed in the toolchain account. These stacks primarily set up the CodePipeline for cross-environment deployments.
-  - **`./infrastructure/stage`**: Defines the stage stacks for different environments:
-    - **`./infrastructure/stage/config.ts`**: Contains environment-specific configuration files (e.g., `beta`, `gamma`, `prod`).
-    - **`./infrastructure/stage/stack.ts`**: The CDK stack entry point for provisioning resources required by the application in `./app`.
+For general terms and expressions used across OrcaBus services, please see the platform
+[documentation](https://github.com/OrcaBus/wiki/blob/main/orcabus-platform/README.md#glossary--references).
 
-- **`.github/workflows/pr-tests.yml`**: Configures GitHub Actions to run tests for `make check` (linting and code style), tests defined in `./test`, and `make test` for the `./app` directory. Modify this file as needed to ensure the tests are properly configured for your environment.
-
-- **`./test`**: Contains tests for CDK code compliance against `cdk-nag`. You should modify these test files to match the resources defined in the `./infrastructure` folder.
-
-
-### Setup
-
-#### Requirements
-
-```sh
-node --version
-v22.9.0
-
-# Update Corepack (if necessary, as per pnpm documentation)
-npm install --global corepack@latest
-
-# Enable Corepack to use pnpm
-corepack enable pnpm
-
-```
-
-#### Install Dependencies
-
-To install all required dependencies, run:
-
-```sh
-make install
-```
-
-#### First Steps
-
-Before using this template, search for all instances of `TODO:` comments in the codebase and update them as appropriate for your service. This includes replacing placeholder values (such as stack names).
-
-
-### Conventions
-
-### Linting & Formatting
-
-Automated checks are enforces via pre-commit hooks, ensuring only checked code is committed. For details consult the `.pre-commit-config.yaml` file.
-
-Manual, on-demand checking is also available via `make` targets (see below). For details consult the `Makefile` in the root of the project.
-
-
-To run linting and formatting checks on the root project, use:
-
-```sh
-make check
-```
-
-To automatically fix issues with ESLint and Prettier, run:
-
-```sh
-make fix
-```
-
-### Testing
-
-
-Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.
-
-```sh
-make test
-```
-
-Glossary & References
---------------------------------------------------------------------------------
-
-For general terms and expressions used across OrcaBus services, please see the platform [documentation](https://github.com/OrcaBus/wiki/blob/main/orcabus-platform/README.md#glossary--references).
+For development setup, build commands, project structure, and conventions see the
+[steering docs](.kiro/steering/).
 
 Service specific terms:
 
-| Term      | Description                                      |
-|-----------|--------------------------------------------------|
-| Foo | ... |
-| Bar | ... |
+| Term      | Description                                                                                                      |
+|-----------|------------------------------------------------------------------------------------------------------------------|
+| Job       | A unit of unarchiving work, created against a list of fastq ids with a job type (e.g. `S3_UNARCHIVING`).         |
+| Fastq id  | Identifies a FASTQ file in the Fastq Manager. Resolve fastq ids from a library id via the fastq set API first.   |
