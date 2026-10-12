@@ -37,6 +37,7 @@ export const stepFunctionLambdaMap: Record<StepFunctionName, LambdaNameType[]> =
     'generateJsonl',
     'updateIngestId',
     'updateJobDatabase',
+    'syncFilemanager',
   ],
 };
 
